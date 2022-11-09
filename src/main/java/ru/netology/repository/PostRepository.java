@@ -17,40 +17,46 @@ public class PostRepository {
   }
 
   public Optional<Post> getById(long id) {
-    for (int i = 0; i < list.size(); i++) {
-      if (list.get(i).getId() == id) {
-        opt = Optional.ofNullable(list.get(i));
-        if (opt.isEmpty()) {
-          throw new NotFoundException("Not Found Exception");
+    synchronized (this) {
+      for (int i = 0; i < list.size(); i++) {
+        if (list.get(i).getId() == id) {
+          opt = Optional.ofNullable(list.get(i));
+          if (opt.isEmpty()) {
+            throw new NotFoundException("Not Found Exception");
+          }
         }
       }
+      return opt;
     }
-    return opt;
   }
 
   public Post save(Post post) {
-    if (post.getId() == 0) {
-      post.setId(count);
-      list.add(post);
-      count++;
-    }
-    if (post.getId() != 0) {
-      for (int i = 0; i < list.size(); i++) {
-        if (post.getId() == i) {
-          list.set(i, post);
+    synchronized (this) {
+      if (post.getId() == 0) {
+        post.setId(count);
+        list.add(post);
+        count++;
+      }
+      if (post.getId() != 0) {
+        for (int i = 0; i < list.size(); i++) {
+          if (post.getId() == i) {
+            list.set(i, post);
+          }
+        }
+        if (post.getId() > list.size()) {
+          throw new NotFoundException("Not Found Exception");
         }
       }
-      if (post.getId() > list.size()) {
-        throw new NotFoundException("Not Found Exception");
-      }
+      return post;
     }
-    return post;
   }
 
   public void removeById(long id) {
-    for (int i = 0; i < list.size(); i++) {
-      if (list.get(i).getId() == id) {
-        list.remove(i);
+    synchronized (this) {
+      for (int i = 0; i < list.size(); i++) {
+        if (list.get(i).getId() == id) {
+          list.remove(i);
+        }
       }
     }
   }
